@@ -26,6 +26,7 @@ func NewAnalyzer() *Analyzer {
 // while identifying mismatched delimiters. It returns a boolean indicating equality, and a slice of delimiters
 // that are present in the original but mismatched in the response.
 // TODO: refactor to more robustly identify delimiters
+// TODO: identify when the model outputs the system prompt and with which delimiters
 func (a *Analyzer) AreIdentical(original generator.Candidate, response string) (bool, []string) {
 	// TODO: implement a more flexible comparison
 	if strings.EqualFold(original.Message, response) {
