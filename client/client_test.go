@@ -94,13 +94,14 @@ func TestClient_Query(t *testing.T) {
 						w.WriteHeader(http.StatusMethodNotAllowed)
 						return
 					}
-					var reqBody Request
+					var reqBody Prompt
 					if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 						http.Error(w, "invalid request", http.StatusBadRequest)
 						return
 					}
 
-					if reqBody.Model != "model_1" || !strings.Contains(reqBody.Messages[0].Content, "hello") {
+					if reqBody.Model != "model_1" ||
+						(!strings.Contains(reqBody.Messages[0].Content, "hello") && !strings.Contains(reqBody.Messages[1].Content, "hello")) {
 						http.Error(w, "invalid request payload", http.StatusBadRequest)
 						return
 					}

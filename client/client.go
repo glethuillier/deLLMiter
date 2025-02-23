@@ -6,13 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 )
-
-// promptConstraints specifies a constant string instruction for response handling without modifications or additions
-// NOTE: not using system command as it is not enforced by all models
-// TODO: assess how this constraint could be improved
-const promptConstraints = "Just ping back the following text (do not add anything else, do not modify the original text)"
 
 type SupportedModels struct {
 	Object string `json:"object"`
@@ -27,13 +23,6 @@ type SupportedModels struct {
 		State             string `json:"state"`
 		MaxContextLength  int    `json:"max_context_length"`
 	} `json:"data"`
-}
-
-type Request struct {
-	Model       string    `json:"model"`
-	Messages    []Message `json:"messages"`
-	Temperature float64   `json:"temperature"`
-	Stream      bool      `json:"stream"`
 }
 
 type Message struct {
@@ -113,10 +102,16 @@ func NewClient(baseURL string, requestedModel string) (*Client, error) {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", marshalErr)
 	}
 
+	queryURL, err := url.JoinPath(baseURL, "/api/v0/chat/completions")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create query URL: %w", err)
+	}
+
 	for _, model := range supportedModels.Data {
+
 		if strings.EqualFold(requestedModel, model.ID) {
 			return &Client{
-				queryURL:   fmt.Sprintf(baseURL + "/api/v0/chat/completions"),
+				queryURL:   queryURL,
 				httpClient: &http.Client{},
 			}, nil
 		}
@@ -127,17 +122,7 @@ func NewClient(baseURL string, requestedModel string) (*Client, error) {
 
 // Query sends a request with specified model and message content, returning the response text or an error if encountered.
 func (c *Client) Query(modelName string, messageContent string) (string, error) {
-	request := Request{
-		Model: modelName,
-		Messages: []Message{{
-			Role:    "user",
-			Content: fmt.Sprintf("%s: %s", promptConstraints, messageContent),
-		}},
-		Temperature: 0.8,
-		Stream:      false,
-	}
-
-	requestJSON, err := json.Marshal(request)
+	requestJSON, err := json.Marshal(getPrompt(modelName, messageContent))
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal request: %w", err)
 	}
