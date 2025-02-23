@@ -20,7 +20,7 @@ In this initial phase, any discrepancies between input and output are stored in 
 
 # Demo
 
-(TODO: add demo)
+https://github.com/user-attachments/assets/3aa0a74f-5bf2-41db-aded-b6962199960b
 
 # Usage
 
